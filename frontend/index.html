@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Adaptive Load Balancer Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Adaptive Load Balancer Simulator</h1>
+
+    <div class="controls">
+        <label>Algorithm:</label>
+        <select id="algorithm">
+            <option value="roundRobin">Round Robin</option>
+            <option value="leastLoad">Least Load</option>
+            <option value="weighted">Weighted</option>
+        </select>
+
+        <button id="sendRequest">Send Request</button>
+        <button id="burstRequest">Burst (50)</button>
+    </div>
+
+    <div id="serverContainer" class="server-container">
+        <!-- Server cards will render here -->
+    </div>
+
+    <div class="log-section">
+        <h3>Activity Log</h3>
+        <div id="logs"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
