@@ -4,417 +4,563 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AdaptLB — Adaptive Load Balancer Simulator</title>
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-  <!-- Main Stylesheet -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Epilogue:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <!-- ============================================================
-       SECTION 1: LANDING PAGE
-  ============================================================ -->
+  <!-- LANDING PAGE -->
   <div id="landing">
 
     <!-- NAV -->
     <nav>
-      <div class="nav-logo">◈ ADAPT<span>LB</span></div>
+      <div class="nav-logo">
+        <div class="logo-mark">◈</div>
+        <div class="logo-text">ADAPT<span>LB</span></div>
+      </div>
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#algorithms">Algorithms</a>
-        <a href="#hackathon">How It Works</a>
+        <a href="#howitworks">Docs</a>
       </div>
-      <div class="nav-badge">HACKATHON EDITION</div>
+      <div class="nav-actions">
+        <span class="nav-version">v2.4.1</span>
+        <button class="btn-nav" onclick="showSimulator()">Open Simulator →</button>
+      </div>
     </nav>
 
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-tag">ADAPTIVE LOAD BALANCER SIMULATOR</div>
-      <h1>Smart Traffic.<br/><em>Zero Downtime.</em></h1>
-      <p class="hero-sub">
-        A real-time simulator that dynamically routes requests across servers using 
-        adaptive algorithms — session-aware, fault-tolerant, and energy-efficient.
-      </p>
-      <div class="hero-cta">
-        <!-- PRIMARY CTA — triggers showSimulator() in script.js -->
-        <button class="btn-primary" onclick="showSimulator()">▶ START SIMULATION</button>
-        <a href="#features" class="btn-ghost">Explore Features ↓</a>
+      <div class="hero-left">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          DISTRIBUTED SYSTEMS TOOLING
+        </div>
+        <h1>Understand load<br/>balancing.<br/><em>Visually.</em></h1>
+        <p class="hero-sub">
+          A browser-based simulator for engineers who want to understand how adaptive routing algorithms behave under real traffic conditions — spike handling, session affinity, fault tolerance, and more.
+        </p>
+        <div class="hero-cta">
+          <button class="btn-primary" onclick="showSimulator()">
+            <span class="btn-icon">▶</span> Launch Simulator
+          </button>
+          <a href="#algorithms" class="btn-secondary">Compare Algorithms</a>
+        </div>
+        <div class="hero-note">No install required. Runs entirely in-browser.</div>
       </div>
-      <!-- Stats bar -->
-      <div class="hero-stats">
-        <div class="hero-stat"><div class="hero-stat-val">4</div><div class="hero-stat-lbl">ALGORITHMS</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">9+</div><div class="hero-stat-lbl">UNIQUE FEATURES</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">LIVE</div><div class="hero-stat-lbl">SIMULATION</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">0ms</div><div class="hero-stat-lbl">SETUP TIME</div></div>
+      <div class="hero-right">
+        <div class="hero-visual">
+          <div class="vis-label">LIVE ROUTING — LEAST LOAD</div>
+          <div class="vis-servers">
+            <div class="vis-server" style="--pct:34%; --clr:#00ff9d">
+              <div class="vis-srv-name">SRV-01</div>
+              <div class="vis-bar"><div class="vis-fill"></div></div>
+              <div class="vis-pct">34%</div>
+              <div class="vis-status healthy">HEALTHY</div>
+            </div>
+            <div class="vis-server active-route" style="--pct:18%; --clr:#00d4ff">
+              <div class="vis-srv-name">SRV-02</div>
+              <div class="vis-bar"><div class="vis-fill"></div></div>
+              <div class="vis-pct">18%</div>
+              <div class="vis-status healthy">SELECTED ↑</div>
+            </div>
+            <div class="vis-server" style="--pct:71%; --clr:#ffc900">
+              <div class="vis-srv-name">SRV-03</div>
+              <div class="vis-bar"><div class="vis-fill"></div></div>
+              <div class="vis-pct">71%</div>
+              <div class="vis-status busy">BUSY</div>
+            </div>
+            <div class="vis-server" style="--pct:89%; --clr:#ff3d5a">
+              <div class="vis-srv-name">SRV-04</div>
+              <div class="vis-bar"><div class="vis-fill"></div></div>
+              <div class="vis-pct">89%</div>
+              <div class="vis-status overloaded">OVERLOADED</div>
+            </div>
+          </div>
+          <div class="vis-footer">
+            <span>4 servers · 142 req/min · variance 18.2%</span>
+            <span class="vis-algo">● Session-Aware</span>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ============================================================
-         SECTION 2: ALL FEATURES
-    ============================================================ -->
+    <!-- USE CASES STRIP -->
+    <div class="use-strip">
+      <div class="use-strip-inner">
+        <div class="use-item">
+          <div class="use-icon">⚙️</div>
+          <div>
+            <div class="use-title">DevOps & SRE</div>
+            <div class="use-desc">Model routing behavior before deploying changes</div>
+          </div>
+        </div>
+        <div class="use-divider"></div>
+        <div class="use-item">
+          <div class="use-icon">📖</div>
+          <div>
+            <div class="use-title">Students & Learners</div>
+            <div class="use-desc">Visualize distributed systems concepts interactively</div>
+          </div>
+        </div>
+        <div class="use-divider"></div>
+        <div class="use-item">
+          <div class="use-icon">🏛️</div>
+          <div>
+            <div class="use-title">System Design</div>
+            <div class="use-desc">Explore algorithm tradeoffs for interviews and architecture</div>
+          </div>
+        </div>
+        <div class="use-divider"></div>
+        <div class="use-item">
+          <div class="use-icon">🧪</div>
+          <div>
+            <div class="use-title">Backend Engineers</div>
+            <div class="use-desc">Prototype and validate infrastructure decisions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
     <section id="features">
-      <div class="features-header">
-        <div class="section-label">FEATURE SET</div>
-        
-        <p class="section-sub">From baseline server simulation to unique predictive routing — all in one browser tab.</p>
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-label">CAPABILITIES</div>
+          <h2>Everything you need to model<br/>real traffic behavior</h2>
+          <p>From baseline routing simulation to predictive overload detection — built for engineers who want depth.</p>
+        </div>
+
+        <div class="feat-categories">
+          <button class="feat-cat-btn active" onclick="filterFeatures('all')">All</button>
+          <button class="feat-cat-btn" onclick="filterFeatures('core')">Core</button>
+          <button class="feat-cat-btn" onclick="filterFeatures('advanced')">Advanced</button>
+          <button class="feat-cat-btn" onclick="filterFeatures('unique')">Unique</button>
+        </div>
+
+        <div class="features-grid" id="featuresGrid">
+
+          <div class="feat-card" data-category="core">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap core">🖥️</div>
+              <span class="feat-tag core">CORE</span>
+            </div>
+            <h3>Server Pool Simulation</h3>
+            <p>Simulate N backend servers each tracking CPU %, memory %, active connections, and real-time health status. The foundation of any real load balancer environment.</p>
+            <div class="feat-meta">Real-time · Health scoring · N-server support</div>
+          </div>
+
+          <div class="feat-card" data-category="core">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap core">📨</div>
+              <span class="feat-tag core">CORE</span>
+            </div>
+            <h3>Request Generation</h3>
+            <p>Send single requests, fire a burst of 10, trigger a spike of 30, or run continuous auto-stream mode. Model real-world load patterns from steady-state to flash traffic.</p>
+            <div class="feat-meta">Burst · Spike · Auto-stream · Configurable rate</div>
+          </div>
+
+          <div class="feat-card" data-category="core">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap core">⚖️</div>
+              <span class="feat-tag core">CORE</span>
+            </div>
+            <h3>Adaptive Load Distribution</h3>
+            <p>Requests are routed dynamically based on current server state. Switch between Round Robin, Least Load, Weighted, and Session-Aware algorithms live without resetting.</p>
+            <div class="feat-meta">4 algorithms · Hot-swap · State-preserving</div>
+          </div>
+
+          <div class="feat-card" data-category="core">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap core">📊</div>
+              <span class="feat-tag core">CORE</span>
+            </div>
+            <h3>Real-Time Dashboard</h3>
+            <p>Live load bars per server, requests-per-second counter, visual routing log, load distribution chart — all updating in real-time with annotated state transitions.</p>
+            <div class="feat-meta">Live metrics · Distribution chart · Event log</div>
+          </div>
+
+          <div class="feat-card" data-category="core">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap core">💀</div>
+              <span class="feat-tag core">CORE</span>
+            </div>
+            <h3>Failure Simulation</h3>
+            <p>Manually kill any server and watch the system instantly reroute traffic to healthy nodes. Revive it and see load rebalance automatically. Models real fault-tolerance behavior.</p>
+            <div class="feat-meta">Instant kill · Auto-reroute · Graceful revive</div>
+          </div>
+
+          <div class="feat-card" data-category="advanced">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap adv">⚡</div>
+              <span class="feat-tag adv">ADVANCED</span>
+            </div>
+            <h3>Load Spike Handling</h3>
+            <p>Flood the system with 30 simultaneous requests. The adaptive router redistributes load instantly to maintain balance — observe exactly how the algorithm responds under pressure.</p>
+            <div class="feat-meta">30-req burst · Adaptive redistribution · Measurable</div>
+          </div>
+
+          <div class="feat-card" data-category="advanced">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap adv">❄️</div>
+              <span class="feat-tag adv">ADVANCED</span>
+            </div>
+            <h3>Server Cool-Down</h3>
+            <p>When a server crosses the overload threshold, it temporarily stops receiving new requests while CPU recovers. Smarter than naive least-load — prevents cascading failure chains.</p>
+            <div class="feat-meta">Threshold-based · Auto-recovery · Configurable</div>
+          </div>
+
+          <div class="feat-card" data-category="advanced">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap adv">📦</div>
+              <span class="feat-tag adv">ADVANCED</span>
+            </div>
+            <h3>Request Type Awareness</h3>
+            <p>Light, Normal, Heavy, and Admin request types each carry different CPU costs. The scheduler accounts for request weight, not just connection count — matching real heterogeneous workloads.</p>
+            <div class="feat-meta">4 types · Cost-weighted · Priority-aware</div>
+          </div>
+
+          <div class="feat-card" data-category="advanced">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap adv">📡</div>
+              <span class="feat-tag adv">ADVANCED</span>
+            </div>
+            <h3>Latency-Based Feedback</h3>
+            <p>Each server's response latency is measured and displayed. Slow servers get penalized even if CPU appears low — matching production load balancer logic where latency is a first-class signal.</p>
+            <div class="feat-meta">Per-server latency · Penalty scoring · Live tracking</div>
+          </div>
+
+          <div class="feat-card" data-category="unique">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap unique">🔗</div>
+              <span class="feat-tag unique">UNIQUE</span>
+            </div>
+            <h3>Session-Aware Balancing</h3>
+            <p>User sessions are pinned to their original server for consistency. Adaptive rerouting only triggers if that server degrades — combining sticky sessions with intelligent failover logic.</p>
+            <div class="feat-meta">Sticky affinity · Adaptive fallback · Stateful</div>
+          </div>
+
+          <div class="feat-card" data-category="unique">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap unique">🔐</div>
+              <span class="feat-tag unique">UNIQUE</span>
+            </div>
+            <h3>Duplicate Login Prevention</h3>
+            <p>Each user can only have one active session. A second login invalidates the previous session — preventing session explosion and the artificial load spikes that destabilize clusters.</p>
+            <div class="feat-meta">Single-session enforcement · Auto-invalidation</div>
+          </div>
+
+          <div class="feat-card" data-category="unique">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap unique">🔮</div>
+              <span class="feat-tag unique">UNIQUE</span>
+            </div>
+            <h3>Load Prediction — Sliding Window</h3>
+            <p>Maintains a sliding window of the last 8 load readings to detect rising trends and preemptively reroute. No ML — fully deterministic and explainable. Trend rises over 10% trigger early avoidance.</p>
+            <div class="feat-meta">8-reading window · Deterministic · Preemptive routing</div>
+          </div>
+
+          <div class="feat-card" data-category="unique">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap unique">🛡️</div>
+              <span class="feat-tag unique">UNIQUE</span>
+            </div>
+            <h3>Graceful Load Shedding</h3>
+            <p>When the cluster is fully overloaded, low-priority requests are rejected while admin requests are always served. Models the priority queuing behavior found in production API gateways.</p>
+            <div class="feat-meta">Priority queuing · Selective drop · Admin bypass</div>
+          </div>
+
+          <div class="feat-card" data-category="unique">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap unique">🌙</div>
+              <span class="feat-tag unique">UNIQUE</span>
+            </div>
+            <h3>Energy-Aware Sleep Mode</h3>
+            <p>When traffic is low, consolidate load and put underutilized servers into sleep mode. Reduces active server count — a green computing optimization pattern used in modern cloud autoscaling.</p>
+            <div class="feat-meta">Auto-consolidation · Sleep/wake · Resource optimization</div>
+          </div>
+
+          <div class="feat-card" data-category="unique">
+            <div class="feat-card-top">
+              <div class="feat-icon-wrap unique">📐</div>
+              <span class="feat-tag unique">UNIQUE</span>
+            </div>
+            <h3>Algorithm Comparison Mode</h3>
+            <p>Switch between all 4 algorithms live and compare efficiency scores, load variance, and request handling behavior in real-time — making the simulator an educational analysis tool.</p>
+            <div class="feat-meta">Live comparison · Scored metrics · Side-by-side</div>
+          </div>
+
+        </div>
       </div>
+    </section>
 
-      <!-- Category filter buttons — JS toggles visibility via data-category -->
-      <div class="feat-categories">
-        <button class="feat-cat-btn active" onclick="filterFeatures('all')">All Features</button>
-        <button class="feat-cat-btn" onclick="filterFeatures('core')">Core / Baseline</button>
-        <button class="feat-cat-btn" onclick="filterFeatures('advanced')">Advanced</button>
-        <button class="feat-cat-btn" onclick="filterFeatures('unique')">⭐ Unique</button>
-      </div>
-
-      <div class="features-grid" id="featuresGrid">
-
-        <!-- ── CORE FEATURES ─────────────────────────────────── -->
-
-        <div class="feat-card" data-category="core" style="--card-color: var(--accent)">
-          <span class="feat-badge badge-core">CORE</span>
-          <div class="feat-icon">🖥️</div>
-          <h3>Server Pool Simulation</h3>
-          <p>Simulate N backend servers each tracking CPU usage %, memory %, active connections, and real-time health status (Healthy / Overloaded / Down). The foundation of any real load balancer.</p>
-        </div>
-
-        <div class="feat-card" data-category="core" style="--card-color: var(--accent)">
-          <span class="feat-badge badge-core">CORE</span>
-          <div class="feat-icon">📨</div>
-          <h3>Request Generation</h3>
-          <p>Send a single request, fire a burst of 10, trigger a spike of 30, or enable continuous auto-stream mode. Demonstrates how the system adapts under changing real-world load patterns.</p>
-        </div>
-
-        <div class="feat-card" data-category="core" style="--card-color: var(--accent)">
-          <span class="feat-badge badge-core">CORE</span>
-          <div class="feat-icon">⚖️</div>
-          <h3>Adaptive Load Distribution</h3>
-          <p>Requests are routed dynamically based on current server state. Switch between Round Robin, Least Load, Weighted, and Session-Aware algorithms live without restarting the simulation.</p>
-        </div>
-
-        <div class="feat-card" data-category="core" style="--card-color: var(--accent)">
-          <span class="feat-badge badge-core">CORE</span>
-          <div class="feat-icon">📊</div>
-          <h3>Real-Time Dashboard</h3>
-          <p>Live load bars per server, requests-per-second counter, visual routing log, and load distribution chart — all updating in real-time. Makes your demo visually compelling to judges.</p>
-        </div>
-
-        <div class="feat-card" data-category="core" style="--card-color: var(--accent)">
-          <span class="feat-badge badge-core">CORE</span>
-          <div class="feat-icon">💀</div>
-          <h3>Failure Simulation</h3>
-          <p>Manually kill any server and watch the system instantly reroute traffic to healthy nodes. Revive it later and see load rebalance automatically. Demonstrates fault tolerance clearly.</p>
-        </div>
-
-        <!-- ── ADVANCED FEATURES ──────────────────────────────── -->
-
-        <div class="feat-card" data-category="advanced" style="--card-color: var(--purple)">
-          <span class="feat-badge badge-adv">ADVANCED</span>
-          <div class="feat-icon">⚡</div>
-          <h3>Load Spike Handling</h3>
-          <p>A single button floods the system with 30 simultaneous requests. The adaptive router redistributes load instantly to maintain balance, clearly showing the algorithm's decision-making under pressure.</p>
-        </div>
-
-        <div class="feat-card" data-category="advanced" style="--card-color: var(--purple)">
-          <span class="feat-badge badge-adv">ADVANCED</span>
-          <div class="feat-icon">❄️</div>
-          <h3>Server Cool-Down Mechanism</h3>
-          <p>When a server crosses the overload threshold, it temporarily stops receiving new requests and lets its CPU recover. Smarter than naive least-load — prevents cascading failures.</p>
-        </div>
-
-        <div class="feat-card" data-category="advanced" style="--card-color: var(--purple)">
-          <span class="feat-badge badge-adv">ADVANCED</span>
-          <div class="feat-icon">📦</div>
-          <h3>Request Type Awareness</h3>
-          <p>Choose between Light, Normal, Heavy, and Admin request types. The scheduler accounts for request cost (CPU impact), not just connection count — mimicking real-world heterogeneous workloads.</p>
-        </div>
-
-        <div class="feat-card" data-category="advanced" style="--card-color: var(--purple)">
-          <span class="feat-badge badge-adv">ADVANCED</span>
-          <div class="feat-icon">📡</div>
-          <h3>Latency-Based Feedback</h3>
-          <p>Each server's response latency is measured and displayed. Slow servers get penalized even if their CPU appears low — matching how production load balancers make smarter routing decisions.</p>
-        </div>
-
-        <!-- ── UNIQUE FEATURES ────────────────────────────────── -->
-
-        <div class="feat-card" data-category="unique" style="--card-color: var(--green)">
-          <span class="feat-badge badge-star">⭐ UNIQUE</span>
-          <div class="feat-icon">🔗</div>
-          <h3>Session-Aware Load Balancing</h3>
-          <p>User sessions are pinned to their original server for consistency. Adaptive rerouting only triggers if that server degrades badly — combining sticky sessions with intelligent failover.</p>
-        </div>
-
-        <div class="feat-card" data-category="unique" style="--card-color: var(--green)">
-          <span class="feat-badge badge-star">⭐ UNIQUE</span>
-          <div class="feat-icon">🔐</div>
-          <h3>Duplicate Login Prevention</h3>
-          <p>Each user can only have one active session. A second login either rejects or invalidates the previous session — preventing session explosion and artificial load spikes that destabilize the cluster.</p>
-        </div>
-
-        <div class="feat-card" data-category="unique" style="--card-color: var(--green)">
-          <span class="feat-badge badge-star">⭐ UNIQUE</span>
-          <div class="feat-icon">🔮</div>
-          <h3>Load Prediction (Sliding Window)</h3>
-          <p>Maintains a sliding window of the last K load readings to detect rising trends and preemptively reroute — no ML, fully deterministic and explainable. Judges love "predictive but simple."</p>
-        </div>
-
-        <div class="feat-card" data-category="unique" style="--card-color: var(--green)">
-          <span class="feat-badge badge-star">⭐ UNIQUE</span>
-          <div class="feat-icon">🛡️</div>
-          <h3>Graceful Load Shedding</h3>
-          <p>When the cluster is fully overloaded, low-priority requests are rejected while critical and admin requests are always served. User-controlled priority levels: Normal, High, Admin.</p>
-        </div>
-
-        <div class="feat-card" data-category="unique" style="--card-color: var(--green)">
-          <span class="feat-badge badge-star">⭐ UNIQUE</span>
-          <div class="feat-icon">🌙</div>
-          <h3>Energy-Aware Load Balancing</h3>
-          <p>When traffic is low, consolidate load and put underutilized servers into sleep mode. Reduces active server count to save resources — a real-world green computing concept rarely shown in student projects.</p>
-        </div>
-
-        <div class="feat-card" data-category="unique" style="--card-color: var(--green)">
-          <span class="feat-badge badge-star">⭐ UNIQUE</span>
-          <div class="feat-icon">📐</div>
-          <h3>Algorithm Comparison Mode</h3>
-          <p>Switch between all 4 algorithms live and compare their efficiency scores, load variance, and request handling — turning the simulator into an educational tool that judges appreciate.</p>
-        </div>
-
-      </div><!-- /features-grid -->
-    </section><!-- /features -->
-
-    <!-- ============================================================
-         SECTION 3: HOW IT WORKS
-    ============================================================ -->
+    <!-- HOW IT WORKS -->
     <section id="howitworks">
-      <div class="hiw-inner">
-        <div class="hiw-header">
-          <div class="section-label">HOW IT WORKS</div>
-          <h2 class="section-title">Request Lifecycle</h2>
-          <p class="section-sub">Every request flows through 4 stages before completing.</p>
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-label">REQUEST LIFECYCLE</div>
+          <h2>How a request flows<br/>through the system</h2>
         </div>
-        <div class="hiw-steps">
+        <div class="hiw-grid">
           <div class="hiw-step">
             <div class="hiw-num">01</div>
-            <h4>Request Arrives</h4>
-            <p>A request enters the system with a type (light/normal/heavy/admin) and optional session ID attached.</p>
+            <div class="hiw-body">
+              <h4>Request Arrives</h4>
+              <p>A request enters the system carrying a type (light / normal / heavy / admin) and an optional session ID. Priority is determined at intake.</p>
+            </div>
           </div>
+          <div class="hiw-connector">→</div>
           <div class="hiw-step">
             <div class="hiw-num">02</div>
-            <h4>Algorithm Selects Server</h4>
-            <p>The active algorithm evaluates all healthy, non-sleeping servers and picks the optimal target based on CPU, connections, or session affinity.</p>
+            <div class="hiw-body">
+              <h4>Algorithm Selects Server</h4>
+              <p>The active algorithm evaluates all healthy, non-sleeping servers and picks the optimal target based on CPU load, connections, or session affinity.</p>
+            </div>
           </div>
+          <div class="hiw-connector">→</div>
           <div class="hiw-step">
             <div class="hiw-num">03</div>
-            <h4>Request Processed</h4>
-            <p>The target server's CPU rises proportional to request cost. Latency is computed. The cool-down mechanism monitors for overload threshold breaches.</p>
+            <div class="hiw-body">
+              <h4>Request is Processed</h4>
+              <p>The target server's CPU rises proportional to request cost. Latency is computed. The cool-down mechanism monitors for overload threshold breaches in real-time.</p>
+            </div>
           </div>
+          <div class="hiw-connector">→</div>
           <div class="hiw-step">
             <div class="hiw-num">04</div>
-            <h4>Server Recovers</h4>
-            <p>After processing, CPU decays back to baseline. Sleeping servers consolidate idle load. The dashboard reflects all state changes in real-time.</p>
+            <div class="hiw-body">
+              <h4>Server Recovers</h4>
+              <p>After processing, CPU decays back to baseline. Sleeping servers consolidate idle load. The dashboard reflects all state changes live.</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ============================================================
-         SECTION 4: ALGORITHM COMPARISON
-    ============================================================ -->
+    <!-- ALGORITHMS -->
     <section id="algorithms">
-      <div class="algo-inner">
-        <div class="algo-header">
-          <div class="section-label">ALGORITHMS</div>
-          <h2 class="section-title">4 Routing Strategies</h2>
-          <p class="section-sub">Switch between them live in the simulator to compare performance.</p>
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-label">ROUTING ALGORITHMS</div>
+          <h2>Four strategies.<br/>One simulator to compare them.</h2>
+          <p>Switch between all algorithms live without restarting. Observe how each handles spikes, failures, and session continuity differently.</p>
         </div>
         <div class="algo-grid">
 
           <div class="algo-card">
-            <div class="algo-title">
-              <span class="algo-name">Round Robin</span>
-              <span class="algo-score">60 / 100</span>
+            <div class="algo-header">
+              <div class="algo-num">01</div>
+              <div>
+                <div class="algo-name">Round Robin</div>
+                <div class="algo-score-row">
+                  <div class="algo-score-bar"><div class="algo-score-fill" style="width:60%; background:var(--accent)"></div></div>
+                  <span class="algo-score">60</span>
+                </div>
+              </div>
             </div>
-            <div class="algo-bar-wrap"><div class="algo-bar" style="width:60%; background: var(--accent)"></div></div>
             <p>Distributes requests equally in a fixed cycle. Simple and predictable, but ignores actual server load. Best when all servers are identical and traffic is uniform.</p>
             <div class="algo-tags">
-              <span class="algo-tag">STATELESS</span>
-              <span class="algo-tag">O(1)</span>
-              <span class="algo-tag">NO AWARENESS</span>
+              <span>STATELESS</span><span>O(1)</span><span>LOAD-BLIND</span>
             </div>
+            <div class="algo-best">Best for: uniform hardware, predictable traffic</div>
           </div>
 
           <div class="algo-card">
-            <div class="algo-title">
-              <span class="algo-name">Least Load</span>
-              <span class="algo-score">85 / 100</span>
+            <div class="algo-header">
+              <div class="algo-num">02</div>
+              <div>
+                <div class="algo-name">Least Load</div>
+                <div class="algo-score-row">
+                  <div class="algo-score-bar"><div class="algo-score-fill" style="width:85%; background:var(--green)"></div></div>
+                  <span class="algo-score">85</span>
+                </div>
+              </div>
             </div>
-            <div class="algo-bar-wrap"><div class="algo-bar" style="width:85%; background: var(--green)"></div></div>
-            <p>Routes every request to the server with the lowest current CPU. Adapts dynamically to real load conditions. Best general-purpose algorithm for heterogeneous traffic.</p>
+            <p>Routes every request to the server with the lowest current CPU. Adapts dynamically to real load conditions — the best general-purpose algorithm for heterogeneous traffic.</p>
             <div class="algo-tags">
-              <span class="algo-tag">ADAPTIVE</span>
-              <span class="algo-tag">CPU-AWARE</span>
-              <span class="algo-tag">BEST BALANCE</span>
+              <span>ADAPTIVE</span><span>CPU-AWARE</span><span>DYNAMIC</span>
             </div>
+            <div class="algo-best">Best for: mixed workloads, heterogeneous traffic</div>
           </div>
 
           <div class="algo-card">
-            <div class="algo-title">
-              <span class="algo-name">Weighted</span>
-              <span class="algo-score">75 / 100</span>
+            <div class="algo-header">
+              <div class="algo-num">03</div>
+              <div>
+                <div class="algo-name">Weighted</div>
+                <div class="algo-score-row">
+                  <div class="algo-score-bar"><div class="algo-score-fill" style="width:75%; background:var(--yellow)"></div></div>
+                  <span class="algo-score">75</span>
+                </div>
+              </div>
             </div>
-            <div class="algo-bar-wrap"><div class="algo-bar" style="width:75%; background: var(--yellow)"></div></div>
-            <p>Assigns traffic proportional to each server's capacity weight. Higher-weight servers receive more requests. Ideal when servers have different hardware specs or capacities.</p>
+            <p>Assigns traffic proportional to each server's capacity weight. Higher-weight servers receive more requests. Ideal when servers have different hardware specifications or reserved capacity.</p>
             <div class="algo-tags">
-              <span class="algo-tag">CAPACITY-AWARE</span>
-              <span class="algo-tag">CONFIGURABLE</span>
-              <span class="algo-tag">PROBABILISTIC</span>
+              <span>CAPACITY-AWARE</span><span>CONFIGURABLE</span><span>PROBABILISTIC</span>
             </div>
+            <div class="algo-best">Best for: mixed-spec clusters, staged rollouts</div>
           </div>
 
-          <div class="algo-card">
-            <div class="algo-title">
-              <span class="algo-name">Session-Aware</span>
-              <span class="algo-score">92 / 100</span>
+          <div class="algo-card highlighted">
+            <div class="algo-recommended">RECOMMENDED</div>
+            <div class="algo-header">
+              <div class="algo-num">04</div>
+              <div>
+                <div class="algo-name">Session-Aware</div>
+                <div class="algo-score-row">
+                  <div class="algo-score-bar"><div class="algo-score-fill" style="width:92%; background:var(--purple)"></div></div>
+                  <span class="algo-score">92</span>
+                </div>
+              </div>
             </div>
-            <div class="algo-bar-wrap"><div class="algo-bar" style="width:92%; background: var(--purple)"></div></div>
-            <p>Maintains sticky session affinity while falling back to least-connections if the pinned server degrades. The best of both worlds — consistency + adaptivity.</p>
+            <p>Maintains sticky session affinity while falling back to least-connections if the pinned server degrades. Combines consistency with adaptivity for stateful applications.</p>
             <div class="algo-tags">
-              <span class="algo-tag">STICKY SESSIONS</span>
-              <span class="algo-tag">ADAPTIVE FALLBACK</span>
-              <span class="algo-tag">STATEFUL</span>
+              <span>STICKY SESSIONS</span><span>ADAPTIVE FALLBACK</span><span>STATEFUL</span>
             </div>
+            <div class="algo-best">Best for: stateful apps, user sessions, APIs with auth</div>
           </div>
 
         </div>
       </div>
     </section>
 
-    <!-- ============================================================
-         SECTION 5: HACKATHON COMBO
-    ============================================================ -->
-    <section id="hackathon">
-      <div class="hack-inner">
-        <div class="hack-left">
-          <div class="section-label">WINNING COMBO</div>
-          <h2>Built to Win in<br/>90 Minutes</h2>
-          <p>The minimum viable feature set that impresses judges — no fluff, no buzzwords, just explainable engineering.</p>
-          <div class="hack-checklist">
-            <div class="hack-check"><div class="hack-check-dot">✓</div><span>Adaptive routing with live algorithm switching</span></div>
-            <div class="hack-check"><div class="hack-check-dot">✓</div><span>Session-aware balancing with sticky affinity</span></div>
-            <div class="hack-check"><div class="hack-check-dot">✓</div><span>Duplicate login prevention to reduce load spikes</span></div>
-            <div class="hack-check"><div class="hack-check-dot">✓</div><span>Visual live dashboard with real-time metrics</span></div>
-            <div class="hack-check"><div class="hack-check-dot">✓</div><span>Failure simulation + energy-aware sleep mode</span></div>
+    <!-- TECH DETAILS -->
+    <section id="tech">
+      <div class="section-inner">
+        <div class="tech-grid">
+          <div class="tech-left">
+            <div class="section-label">IMPLEMENTATION</div>
+            <h2>Deterministic, explainable logic — no black boxes</h2>
+            <p>Every routing decision in AdaptLB is traceable. The sliding window prediction, graceful shedding, and cool-down mechanism all use simple, auditable math — not heuristics or ML models.</p>
+            <div class="tech-stats">
+              <div class="tech-stat">
+                <div class="tech-stat-val">0</div>
+                <div class="tech-stat-lbl">Dependencies</div>
+              </div>
+              <div class="tech-stat">
+                <div class="tech-stat-val">4</div>
+                <div class="tech-stat-lbl">Algorithms</div>
+              </div>
+              <div class="tech-stat">
+                <div class="tech-stat-val">~1.2s</div>
+                <div class="tech-stat-lbl">Tick interval</div>
+              </div>
+              <div class="tech-stat">
+                <div class="tech-stat-val">8×</div>
+                <div class="tech-stat-lbl">Window depth</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="hack-right">
-          <div class="c-comment">// Winning pitch line for judges</div><br/>
-          <span class="c-key">const</span> pitch = {<br/>
-          &nbsp;&nbsp;<span class="c-str">"routing"</span>: <span class="c-val">"adaptive + session-sticky"</span>,<br/>
-          &nbsp;&nbsp;<span class="c-str">"security"</span>: <span class="c-val">"duplicate login prevention"</span>,<br/>
-          &nbsp;&nbsp;<span class="c-str">"resilience"</span>: <span class="c-val">"fault-tolerant rerouting"</span>,<br/>
-          &nbsp;&nbsp;<span class="c-str">"efficiency"</span>: <span class="c-val">"energy-aware sleep mode"</span>,<br/>
-          &nbsp;&nbsp;<span class="c-str">"prediction"</span>: <span class="c-val">"sliding window forecast"</span>,<br/>
-          &nbsp;&nbsp;<span class="c-str">"shedding"</span>: <span class="c-val">"graceful priority queuing"</span>,<br/>
-          };<br/><br/>
-          <div class="c-comment">// What NOT to say to judges</div><br/>
-          <span class="c-key">const</span> avoid = [<br/>
-          &nbsp;&nbsp;<span class="c-str">"AI-powered"</span>, <span class="c-comment">// ← red flag</span><br/>
-          &nbsp;&nbsp;<span class="c-str">"blockchain"</span>, <span class="c-comment">// ← instant rejection</span><br/>
-          &nbsp;&nbsp;<span class="c-str">"deep learning"</span>, <span class="c-comment">// ← prove it</span><br/>
-          &nbsp;&nbsp;<span class="c-str">"kubernetes-scale"</span>, <span class="c-comment">// ← overkill</span><br/>
-          ];
+          <div class="tech-right">
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <div class="code-title">Sliding Window Load Prediction</div>
+              </div>
+              <div class="code-body">
+                <div class="code-comment">// Compares first-half vs second-half of last 8 CPU readings</div>
+                <div class="code-comment">// No ML — fully deterministic and explainable</div>
+                <br/>
+                <span class="c-key">function</span> <span class="c-fn">isPredictedOverload</span>(serverId) {<br/>
+                &nbsp;&nbsp;<span class="c-key">const</span> history = state.loadHistory[serverId];<br/>
+                &nbsp;&nbsp;<span class="c-key">if</span> (history.length &lt; <span class="c-num">6</span>) <span class="c-key">return</span> <span class="c-val">false</span>;<br/>
+                <br/>
+                &nbsp;&nbsp;<span class="c-key">const</span> half = Math.floor(history.length / <span class="c-num">2</span>);<br/>
+                &nbsp;&nbsp;<span class="c-key">const</span> firstAvg = avg(history.slice(<span class="c-num">0</span>, half));<br/>
+                &nbsp;&nbsp;<span class="c-key">const</span> secondAvg = avg(history.slice(half));<br/>
+                <br/>
+                &nbsp;&nbsp;<span class="c-comment">// Rising trend: 10+ point increase triggers avoidance</span><br/>
+                &nbsp;&nbsp;<span class="c-key">return</span> (secondAvg - firstAvg) &gt; <span class="c-num">10</span>;<br/>
+                }
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- ============================================================
-         SECTION 6: FINAL CTA
-    ============================================================ -->
+    <!-- FINAL CTA -->
     <section id="cta">
       <div class="cta-inner">
-        <h2>Ready to Simulate?</h2>
-        <p>Click below to launch the live simulator — kill servers, send spikes, manage sessions, and watch the algorithms compete in real-time.</p>
-        <div class="cta-glow">
-          <!-- CTA button also calls showSimulator() -->
-          <button class="btn-primary btn-large" onclick="showSimulator()">▶ LAUNCH SIMULATOR</button>
+        <div class="cta-content">
+          <div class="section-label">GET STARTED</div>
+          <h2>Ready to simulate real traffic?</h2>
+          <p>Open the simulator, kill servers, trigger spikes, manage sessions, and watch the four algorithms handle it differently — in real-time.</p>
+          <div class="cta-actions">
+            <button class="btn-primary btn-large" onclick="showSimulator()">▶ Launch Simulator</button>
+            <a href="#algorithms" class="btn-secondary">Read the Docs</a>
+          </div>
+        </div>
+        <div class="cta-graphic">
+          <div class="cta-ring ring-1"></div>
+          <div class="cta-ring ring-2"></div>
+          <div class="cta-ring ring-3"></div>
+          <div class="cta-center">◈</div>
         </div>
       </div>
     </section>
 
     <!-- FOOTER -->
     <footer>
-      <span>◈ ADAPTLB — ADAPTIVE LOAD BALANCER SIMULATOR</span>
-      <span>HACKATHON EDITION • BUILT WITH VANILLA JS</span>
+      <div class="footer-left">
+        <div class="footer-logo">◈ ADAPTLB</div>
+        <div class="footer-sub">Adaptive Load Balancer Simulator</div>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#algorithms">Algorithms</a>
+        <a href="#howitworks">Docs</a>
+      </div>
+      <div class="footer-right">
+        Built with Vanilla JS · Zero dependencies
+      </div>
     </footer>
 
   </div><!-- /landing -->
 
-
-  <!-- ============================================================
-       SIMULATOR PANEL — shown when showSimulator() is called
-  ============================================================ -->
+  <!-- SIMULATOR -->
   <div id="simulator">
 
-    <!-- TOP BAR -->
     <div class="sim-topbar">
       <div class="sim-logo">◈ ADAPTLB</div>
-      <!-- Back button calls showLanding() -->
-      <button class="sim-back" onclick="showLanding()">← BACK TO LANDING</button>
+      <button class="sim-back" onclick="showLanding()">← Back</button>
       <div class="sim-stat-bar">
-        <div class="sim-stat"><span class="sim-stat-lbl">TOTAL REQ </span><span class="sim-stat-val" id="statTotal">0</span></div>
-        <div class="sim-stat"><span class="sim-stat-lbl">DROPPED </span><span class="sim-stat-val" id="statDropped" style="color:var(--red)">0</span></div>
-        <div class="sim-stat"><span class="sim-stat-lbl">SESSIONS </span><span class="sim-stat-val" id="statSessions" style="color:var(--green)">0</span></div>
-        <div class="sim-stat"><span class="sim-stat-lbl">VARIANCE </span><span class="sim-stat-val" id="statVariance" style="color:var(--yellow)">0%</span></div>
-        <div class="sim-stat"><span class="sim-stat-lbl">ALGO </span><span class="sim-stat-val" id="statAlgo" style="color:var(--purple)">Least Load</span></div>
+        <div class="sim-stat"><span class="sim-stat-lbl">TOTAL</span><span class="sim-stat-val" id="statTotal">0</span></div>
+        <div class="sim-stat"><span class="sim-stat-lbl">DROPPED</span><span class="sim-stat-val dropped" id="statDropped">0</span></div>
+        <div class="sim-stat"><span class="sim-stat-lbl">SESSIONS</span><span class="sim-stat-val sessions" id="statSessions">0</span></div>
+        <div class="sim-stat"><span class="sim-stat-lbl">VARIANCE</span><span class="sim-stat-val variance" id="statVariance">0%</span></div>
+        <div class="sim-stat"><span class="sim-stat-lbl">ALGORITHM</span><span class="sim-stat-val algo" id="statAlgo">Least Load</span></div>
       </div>
     </div>
 
-    <!-- MAIN GRID: two columns -->
     <div class="sim-body">
 
-      <!-- ── LEFT COLUMN ── -->
       <div class="sim-col">
-
-        <!-- SERVER POOL -->
         <div class="card">
           <div class="card-title">SERVER POOL</div>
-          <!-- Servers rendered dynamically by renderServers() in script.js -->
           <div id="serverPool"></div>
         </div>
-
-        <!-- SESSION MANAGER -->
         <div class="card">
-          <div class="card-title">SESSION MANAGER — DUPLICATE LOGIN PREVENTION</div>
+          <div class="card-title">SESSION MANAGER</div>
+          <div class="sess-desc">Each user is bound to one active session. Duplicate logins invalidate the previous session automatically.</div>
           <div class="sess-input-row">
             <input type="text" id="loginInput" class="sess-input" placeholder="Enter username..." onkeydown="if(event.key==='Enter') handleLogin()"/>
-            <button class="sess-btn" onclick="handleLogin()">LOGIN</button>
+            <button class="sess-btn" onclick="handleLogin()">Login</button>
           </div>
-          <!-- Login result message -->
           <div id="loginMsg" style="display:none" class="sess-msg"></div>
-          <!-- Active session tags rendered by renderSessions() -->
           <div class="sess-tags" id="sessionTags"></div>
         </div>
-
-        <!-- LOAD DISTRIBUTION -->
         <div class="card">
-          <div class="card-title">LOAD DISTRIBUTION — REQUESTS HANDLED PER SERVER</div>
-          <!-- Rendered by renderDistribution() -->
+          <div class="card-title">LOAD DISTRIBUTION</div>
           <div id="distChart"></div>
         </div>
+      </div>
 
-      </div><!-- /left col -->
-
-      <!-- ── RIGHT COLUMN ── -->
       <div class="sim-col">
-
-        <!-- CONTROLS -->
         <div class="card">
           <div class="card-title">CONTROLS</div>
-
-          <!-- Algorithm selector -->
           <div class="ctrl-row">
-            <div class="ctrl-lbl">ALGORITHM</div>
+            <div class="ctrl-lbl">ROUTING ALGORITHM</div>
             <div class="btn-group" id="algoGroup">
               <button class="tbtn" onclick="setAlgo('Round Robin')">Round Robin</button>
               <button class="tbtn algo-active" onclick="setAlgo('Least Load')">Least Load</button>
@@ -422,8 +568,6 @@
               <button class="tbtn" onclick="setAlgo('Session-Aware')">Session-Aware</button>
             </div>
           </div>
-
-          <!-- Request type selector -->
           <div class="ctrl-row">
             <div class="ctrl-lbl">REQUEST TYPE</div>
             <div class="btn-group" id="reqGroup">
@@ -433,43 +577,33 @@
               <button class="tbtn" onclick="setReqType('admin')">Admin</button>
             </div>
           </div>
-
-          <!-- Action buttons -->
           <div class="action-grid">
-            <button class="abtn abtn-send"  onclick="sendRequest(1)">▶ SEND REQUEST</button>
-            <button class="abtn abtn-burst" onclick="sendRequest(10)">▶▶ BURST ×10</button>
-            <button class="abtn abtn-spike" onclick="triggerSpike()">⚡ SPIKE ×30</button>
-            <button class="abtn abtn-auto"  id="autoBtn" onclick="toggleAuto()">● AUTO MODE</button>
+            <button class="abtn abtn-send"  onclick="sendRequest(1)">▶ Send Request</button>
+            <button class="abtn abtn-burst" onclick="sendRequest(10)">▶▶ Burst ×10</button>
+            <button class="abtn abtn-spike" onclick="triggerSpike()">⚡ Spike ×30</button>
+            <button class="abtn abtn-auto"  id="autoBtn" onclick="toggleAuto()">● Auto Stream</button>
           </div>
         </div>
 
-        <!-- ALGORITHM COMPARISON -->
         <div class="card">
           <div class="card-title">ALGORITHM COMPARISON</div>
-          <div id="algoCompare">
-            <!-- Rendered by renderAlgoComparison() -->
-          </div>
+          <div id="algoCompare"></div>
         </div>
 
-        <!-- EVENT LOG -->
         <div class="card">
           <div class="card-title">EVENT LOG</div>
           <div class="log-wrap" id="eventLog">
             <div class="log-entry">
               <span class="log-time" style="color:var(--dim)">--:--:--</span>
-              <span class="log-msg" style="color:var(--dim)">Simulator ready. Send a request to begin.</span>
+              <span class="log-msg" style="color:var(--dim)">Simulator ready. Select an algorithm and send a request to begin.</span>
             </div>
           </div>
         </div>
+      </div>
 
-      </div><!-- /right col -->
+    </div>
+  </div>
 
-    </div><!-- /sim-body -->
-
-  </div><!-- /simulator -->
-
-  <!-- Main JavaScript -->
   <script src="script.js"></script>
-
 </body>
 </html>

@@ -4,121 +4,82 @@
 ============================================================ */
 
 /* ============================================================
-   1. STATE — Single source of truth for the entire simulation
+   1. STATE
 ============================================================ */
-
-// Simulation state object — all mutable data lives here
 const state = {
-  servers: [],          // Array of server objects
-  algo: 'Least Load',   // Active routing algorithm
-  reqType: 'normal',    // Active request type: light | normal | heavy | admin
-  sessions: {},         // { username: serverId } — session-to-server map
-  loggedUsers: {},      // { username: timestamp } — active logins
-  rrIndex: 0,           // Round Robin pointer
-  totalReqs: 0,         // Total requests sent
-  droppedReqs: 0,       // Requests dropped due to overload / shedding
-  autoMode: false,      // Auto mode running flag
-  autoInterval: null,   // setInterval handle for auto mode
-  loadHistory: {},      // { serverId: [cpu readings] } — for sliding window prediction
+  servers: [],
+  algo: 'Least Load',
+  reqType: 'normal',
+  sessions: {},
+  loggedUsers: {},
+  rrIndex: 0,
+  totalReqs: 0,
+  droppedReqs: 0,
+  autoMode: false,
+  autoInterval: null,
+  loadHistory: {},
 };
 
 /* ============================================================
-   2. SERVER FACTORY — Create a server object with random initial values
+   2. SERVER FACTORY
 ============================================================ */
-
-/**
- * Creates a new server object.
- * @param {number} id — numeric ID (1-based)
- * @returns {object} server state object
- */
 function createServer(id) {
   return {
     id,
     name: `SRV-${String(id).padStart(2, '0')}`,
-    cpu: Math.random() * 25 + 5,           // Initial CPU 5–30%
-    mem: Math.random() * 35 + 15,          // Initial MEM 15–50%
-    connections: 0,                          // Active connections
-    status: 'healthy',                       // healthy | overloaded | down | sleeping
-    weight: Math.floor(Math.random() * 3) + 1, // Weighted algo weight (1–3)
-    totalHandled: 0,                         // Lifetime requests handled
-    lastLatency: 0,                          // Last response latency (ms)
-    sleeping: false,                         // Energy-saving sleep mode
+    cpu: Math.random() * 25 + 5,
+    mem: Math.random() * 35 + 15,
+    connections: 0,
+    status: 'healthy',
+    weight: Math.floor(Math.random() * 3) + 1,
+    totalHandled: 0,
+    lastLatency: 0,
+    sleeping: false,
   };
 }
 
 /* ============================================================
-   3. BOOT — Initialize servers and start background tick
+   3. BOOT
 ============================================================ */
-
-/**
- * Initializes 4 servers and kicks off the periodic CPU drift.
- * Called once on page load.
- */
 function boot() {
-  // Create 4 servers
   for (let i = 1; i <= 4; i++) {
     state.servers.push(createServer(i));
     state.loadHistory[i] = [];
   }
-
-  // Render initial algo comparison panel
   renderAlgoComparison();
-
-  // Background ticker — simulates organic CPU/MEM drift every 1.2s
   setInterval(tickServers, 1200);
 }
 
 /* ============================================================
-   4. SERVER TICK — Organic background drift for realism
+   4. SERVER TICK
 ============================================================ */
-
-/**
- * Randomly drifts CPU and MEM for all live servers.
- * Also updates status based on CPU threshold.
- * Feeds the loadHistory sliding window for prediction.
- */
 function tickServers() {
   state.servers.forEach(s => {
-    // Skip dead or sleeping servers
     if (s.status === 'down' || s.sleeping) return;
 
-    // Slight random drift — servers fluctuate naturally
     s.cpu = Math.max(3, s.cpu + (Math.random() - 0.52) * 4);
     s.mem = Math.max(8, s.mem + (Math.random() - 0.51) * 2);
-
-    // Cap values
     s.cpu = Math.min(98, s.cpu);
     s.mem = Math.min(98, s.mem);
 
-    // Update status based on CPU
     if (s.cpu > 85)      s.status = 'overloaded';
     else if (s.cpu > 62) s.status = 'busy';
     else                  s.status = 'healthy';
 
-    // Feed sliding window (last 8 readings)
     state.loadHistory[s.id].push(s.cpu);
     if (state.loadHistory[s.id].length > 8) {
       state.loadHistory[s.id].shift();
     }
   });
 
-  // Re-render server pool and distribution chart on every tick
   renderServers();
   renderDistribution();
   updateTopBar();
 }
 
 /* ============================================================
-   5. LOAD PREDICTION — Sliding window trend detection
-   No ML. Deterministic. Explainable to judges.
+   5. LOAD PREDICTION — Sliding Window
 ============================================================ */
-
-/**
- * Predicts if a server's load is trending up using a sliding window average.
- * Compares first-half average vs second-half average.
- * @param {number} serverId
- * @returns {boolean} true if load is rising
- */
 function isPredictedOverload(serverId) {
   const history = state.loadHistory[serverId] || [];
   if (history.length < 6) return false;
@@ -127,51 +88,30 @@ function isPredictedOverload(serverId) {
   const firstHalfAvg = history.slice(0, half).reduce((a, b) => a + b, 0) / half;
   const secondHalfAvg = history.slice(half).reduce((a, b) => a + b, 0) / (history.length - half);
 
-  // Rising trend: second half is 10+ points higher than first half
   return (secondHalfAvg - firstHalfAvg) > 10;
 }
 
 /* ============================================================
-   6. ROUTING ALGORITHMS — Core load balancing logic
+   6. ROUTING ALGORITHMS
 ============================================================ */
-
-/**
- * Picks the best server for the next request using the active algorithm.
- * @param {string|null} userId — for session-aware sticky routing
- * @returns {object|null} chosen server, or null if all down
- */
 function pickServer(userId = null) {
-  // Only consider servers that are alive and not sleeping
   const active = state.servers.filter(s => s.status !== 'down' && !s.sleeping);
   if (!active.length) return null;
 
   switch (state.algo) {
 
-    /* ── Round Robin ────────────────────────────────────────
-       Cycles through servers in fixed order.
-       Simple, stateless, ignores actual load.
-    ─────────────────────────────────────────────────────── */
     case 'Round Robin': {
       const server = active[state.rrIndex % active.length];
       state.rrIndex++;
       return server;
     }
 
-    /* ── Least Load ─────────────────────────────────────────
-       Routes to the server with lowest current CPU.
-       Best general-purpose adaptive algorithm.
-    ─────────────────────────────────────────────────────── */
     case 'Least Load': {
-      // Exclude predicted-overload servers if possible
       const safeActive = active.filter(s => !isPredictedOverload(s.id));
       const pool = safeActive.length > 0 ? safeActive : active;
       return pool.reduce((best, s) => s.cpu < best.cpu ? s : best);
     }
 
-    /* ── Weighted ───────────────────────────────────────────
-       Probabilistic: servers with higher weight get more traffic.
-       Useful when servers have different capacities.
-    ─────────────────────────────────────────────────────── */
     case 'Weighted': {
       const totalWeight = active.reduce((sum, s) => sum + s.weight, 0);
       let rand = Math.random() * totalWeight;
@@ -182,19 +122,13 @@ function pickServer(userId = null) {
       return active[0];
     }
 
-    /* ── Session-Aware ──────────────────────────────────────
-       Sticky: pins user to their original server.
-       Falls back to least-connections if server degrades.
-    ─────────────────────────────────────────────────────── */
     case 'Session-Aware': {
-      // Try sticky server first
       if (userId && state.sessions[userId]) {
         const sticky = state.servers.find(
           s => s.id === state.sessions[userId] && s.status !== 'down' && !s.sleeping
         );
-        if (sticky && sticky.cpu < 80) return sticky; // Serve sticky if healthy
+        if (sticky && sticky.cpu < 80) return sticky;
       }
-      // Fallback: route to server with fewest connections
       return active.reduce((best, s) => s.connections < best.connections ? s : best);
     }
 
@@ -204,44 +138,30 @@ function pickServer(userId = null) {
 }
 
 /* ============================================================
-   7. REQUEST SENDER — Core routing + effects
+   7. REQUEST SENDER
 ============================================================ */
-
-/**
- * Request cost map — heavier requests burn more CPU.
- * This simulates request-type awareness for the scheduler.
- */
 const REQUEST_COST = {
-  light:  3,    // Lightweight (static assets, pings)
-  normal: 7,    // Standard API call
-  heavy:  15,   // Complex computation, DB joins
-  admin:  5,    // Admin/internal — treated as high priority
+  light:  3,
+  normal: 7,
+  heavy:  15,
+  admin:  5,
 };
 
-/**
- * Sends N requests through the load balancer.
- * Handles: graceful load shedding, session affinity, cool-down, latency tracking.
- * @param {number} count — number of requests to send
- * @param {string|null} userId — optional session user
- */
 function sendRequest(count = 1, userId = null) {
   for (let i = 0; i < count; i++) {
     const target = pickServer(userId);
 
-    /* ── Graceful Load Shedding ──────────────────────────
-       If no servers available, or all are overloaded:
-       - Drop low-priority (normal) requests
-       - Always serve admin/high requests if possible
-    ───────────────────────────────────────────────────── */
     if (!target) {
       state.droppedReqs++;
-      addLog(`❌ All servers down — request DROPPED (${state.reqType})`, 'var(--red)');
+      addLog(`❌ All servers unavailable — request dropped (${state.reqType})`, 'var(--red)');
       updateTopBar();
       continue;
     }
 
-    // Graceful shedding: drop low-priority if cluster is overwhelmed
-    const allOverloaded = state.servers.filter(s => !s.sleeping && s.status !== 'down').every(s => s.cpu > 75);
+    const allOverloaded = state.servers
+      .filter(s => !s.sleeping && s.status !== 'down')
+      .every(s => s.cpu > 75);
+
     if (allOverloaded && state.reqType === 'normal' && Math.random() > 0.3) {
       state.droppedReqs++;
       addLog(`🛡️ Load shedding — normal request dropped (cluster overloaded)`, 'var(--orange)');
@@ -249,13 +169,9 @@ function sendRequest(count = 1, userId = null) {
       continue;
     }
 
-    // Cost of this request type
     const cost = REQUEST_COST[state.reqType] || 7;
-
-    // Simulate latency: base = cpu * 2 + jitter + request cost penalty
     const latency = Math.floor(target.cpu * 1.8 + Math.random() * 25 + cost * 4);
 
-    // Apply request load to chosen server
     target.cpu = Math.min(98, target.cpu + cost);
     target.mem = Math.min(98, target.mem + cost * 0.4);
     target.connections++;
@@ -263,15 +179,12 @@ function sendRequest(count = 1, userId = null) {
     target.lastLatency = latency;
     if (target.cpu > 85) target.status = 'overloaded';
 
-    // Pin session to server (Session-Aware + session manager)
     if (userId && !state.sessions[userId]) {
       state.sessions[userId] = target.id;
     }
 
-    // Increment totals
     state.totalReqs++;
 
-    // Log the routing decision
     const typeColors = {
       light: 'var(--green)', normal: 'var(--accent)',
       heavy: 'var(--yellow)', admin: 'var(--red)',
@@ -281,10 +194,6 @@ function sendRequest(count = 1, userId = null) {
       typeColors[state.reqType]
     );
 
-    /* ── Server Cool-Down ────────────────────────────────
-       After processing, CPU and connections decay back to baseline.
-       Prevents permanent overload after bursts.
-    ───────────────────────────────────────────────────── */
     setTimeout(() => {
       target.cpu         = Math.max(3, target.cpu - cost * 0.75);
       target.connections = Math.max(0, target.connections - 1);
@@ -302,117 +211,80 @@ function sendRequest(count = 1, userId = null) {
 /* ============================================================
    8. SPIKE + AUTO MODE
 ============================================================ */
-
-/**
- * Traffic spike — floods system with 30 simultaneous requests.
- * Demonstrates adaptive redistribution under stress.
- */
 function triggerSpike() {
-  addLog(`⚡ TRAFFIC SPIKE — 30 requests inbound!`, 'var(--yellow)');
+  addLog(`⚡ Traffic spike — 30 requests inbound`, 'var(--yellow)');
   sendRequest(30);
 }
 
-/**
- * Toggles continuous auto-send mode.
- * Sends 1 request every 700ms when active.
- */
 function toggleAuto() {
   state.autoMode = !state.autoMode;
   const btn = document.getElementById('autoBtn');
 
   if (state.autoMode) {
     state.autoInterval = setInterval(() => sendRequest(1), 700);
-    btn.textContent   = '■ STOP AUTO';
+    btn.textContent = '■ Stop Auto';
     btn.classList.add('running');
-    addLog(`● Auto mode STARTED`, 'var(--purple)');
+    addLog(`● Auto stream started`, 'var(--purple)');
   } else {
     clearInterval(state.autoInterval);
-    btn.textContent = '● AUTO MODE';
+    btn.textContent = '● Auto Stream';
     btn.classList.remove('running');
-    addLog(`■ Auto mode STOPPED`, 'var(--dim)');
+    addLog(`■ Auto stream stopped`, 'var(--dim)');
   }
 }
 
 /* ============================================================
-   9. SERVER CONTROLS — Kill, Revive, Sleep
+   9. SERVER CONTROLS
 ============================================================ */
-
-/**
- * Kills a server — marks it down, clears connections.
- * Router will avoid it in future picks.
- * @param {number} id — server ID
- */
 function killServer(id) {
   const s = state.servers.find(s => s.id === id);
   if (!s) return;
-  s.status      = 'down';
+  s.status = 'down';
   s.connections = 0;
-  addLog(`💀 ${s.name} went DOWN — traffic rerouted`, 'var(--red)');
+  addLog(`💀 ${s.name} went DOWN — traffic rerouted to healthy nodes`, 'var(--red)');
   renderServers();
   updateTopBar();
 }
 
-/**
- * Revives a downed or sleeping server.
- * Resets CPU to a low baseline.
- * @param {number} id — server ID
- */
 function reviveServer(id) {
   const s = state.servers.find(s => s.id === id);
   if (!s) return;
   s.status   = 'healthy';
   s.sleeping = false;
   s.cpu      = 8 + Math.random() * 10;
-  addLog(`✅ ${s.name} REVIVED — back online`, 'var(--green)');
+  addLog(`✅ ${s.name} revived — back online`, 'var(--green)');
   renderServers();
   updateTopBar();
 }
 
-/**
- * Toggles energy-saving sleep mode for a server.
- * Sleeping servers accept no new traffic but are not "dead".
- * When traffic is low, consolidating to fewer servers saves power.
- * @param {number} id — server ID
- */
 function toggleSleep(id) {
   const s = state.servers.find(s => s.id === id);
   if (!s) return;
   s.sleeping = !s.sleeping;
   if (s.sleeping) {
     s.connections = 0;
-    addLog(`💤 ${s.name} entering SLEEP mode (energy saving)`, 'var(--purple)');
+    addLog(`💤 ${s.name} entering sleep mode (energy consolidation)`, 'var(--purple)');
   } else {
-    addLog(`☀️ ${s.name} WOKE UP — resuming traffic`, 'var(--green)');
+    addLog(`☀️ ${s.name} woke up — resuming traffic`, 'var(--green)');
   }
   renderServers();
 }
 
 /* ============================================================
-   10. ALGORITHM SELECTOR
+   10. ALGORITHM + REQUEST TYPE SELECTOR
 ============================================================ */
-
-/**
- * Sets the active routing algorithm and updates the UI.
- * @param {string} algoName
- */
 function setAlgo(algoName) {
   state.algo = algoName;
-  // Update button active states
   document.querySelectorAll('#algoGroup .tbtn').forEach(btn => {
     btn.classList.toggle('algo-active', btn.textContent.trim() === algoName);
   });
   updateTopBar();
   renderAlgoComparison();
-  addLog(`🔄 Algorithm switched → ${algoName}`, 'var(--purple)');
+  addLog(`🔄 Routing algorithm → ${algoName}`, 'var(--purple)');
 }
 
-/**
- * Sets the active request type and updates the UI.
- * @param {string} type — light | normal | heavy | admin
- */
 function setReqType(type) {
   state.reqType = type;
-  // Update button active states
   document.querySelectorAll('#reqGroup .tbtn').forEach(btn => {
     btn.classList.remove('req-active-light', 'req-active-normal', 'req-active-heavy', 'req-active-admin');
   });
@@ -425,46 +297,30 @@ function setReqType(type) {
 }
 
 /* ============================================================
-   11. SESSION MANAGER — Duplicate login prevention
+   11. SESSION MANAGER
 ============================================================ */
-
-/**
- * Handles user login attempt.
- * - If user already logged in: invalidates old session, creates new one (duplicate prevention)
- * - If new user: creates session, pins to a server
- */
 function handleLogin() {
   const input = document.getElementById('loginInput');
-  const msgEl = document.getElementById('loginMsg');
   const user  = input.value.trim();
   if (!user) return;
-
   input.value = '';
 
   if (state.loggedUsers[user]) {
-    /* ── Duplicate Login Prevention ────────────────────
-       Same user logging in again.
-       Strategy: invalidate previous session, issue new one.
-       This prevents session explosion and artificial load.
-    ───────────────────────────────────────────────────── */
     showLoginMsg(`⚠️ Duplicate login detected for "${user}" — previous session invalidated`, 'warn');
-    addLog(`🔁 Duplicate login: "${user}" — session reset`, 'var(--yellow)');
-    // Invalidate old session
+    addLog(`🔁 Duplicate login: "${user}" — session invalidated and reissued`, 'var(--yellow)');
     delete state.sessions[user];
     state.loggedUsers[user] = Date.now();
-    // Assign to best server freshly
     const target = pickServer(user);
     if (target) {
       state.sessions[user] = target.id;
       addLog(`🔐 "${user}" re-pinned to ${target.name}`, 'var(--accent)');
     }
   } else {
-    // New login
     state.loggedUsers[user] = Date.now();
     const target = pickServer(user);
     if (target) {
       state.sessions[user] = target.id;
-      showLoginMsg(`✅ "${user}" logged in → pinned to SRV-${String(target.id).padStart(2,'0')}`, 'ok');
+      showLoginMsg(`✅ "${user}" authenticated → pinned to SRV-${String(target.id).padStart(2,'0')}`, 'ok');
       addLog(`🔐 "${user}" session started on ${target.name}`, 'var(--green)');
     } else {
       showLoginMsg(`❌ No servers available for "${user}"`, 'warn');
@@ -475,139 +331,106 @@ function handleLogin() {
   updateTopBar();
 }
 
-/** Shows a temporary message in the session panel */
 function showLoginMsg(text, type) {
   const el = document.getElementById('loginMsg');
-  el.textContent   = text;
-  el.className     = `sess-msg ${type}`;
+  el.textContent = text;
+  el.className   = `sess-msg ${type}`;
   el.style.display = 'block';
   setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
-/**
- * Logs out a user — removes session and login record.
- * @param {string} user
- */
 function logoutUser(user) {
   delete state.loggedUsers[user];
   delete state.sessions[user];
-  addLog(`🚪 "${user}" logged out`, 'var(--dim)');
+  addLog(`🚪 "${user}" session terminated`, 'var(--dim)');
   renderSessions();
   updateTopBar();
 }
 
 /* ============================================================
-   12. FEATURE FILTER — Landing page category filter
+   12. FEATURE FILTER
 ============================================================ */
-
-/**
- * Filters feature cards on the landing page by category.
- * @param {string} category — 'all' | 'core' | 'advanced' | 'unique'
- */
 function filterFeatures(category) {
-  // Update active button
   document.querySelectorAll('.feat-cat-btn').forEach(btn => {
     btn.classList.remove('active');
-    if (btn.textContent.toLowerCase().includes(category) || (category === 'all' && btn.textContent === 'All Features')) {
+    const text = btn.textContent.toLowerCase();
+    if (
+      (category === 'all' && text === 'all') ||
+      (category === 'core' && text === 'core') ||
+      (category === 'advanced' && text === 'advanced') ||
+      (category === 'unique' && text === 'unique')
+    ) {
       btn.classList.add('active');
     }
   });
-  // Show/hide cards
   document.querySelectorAll('.feat-card').forEach(card => {
     const cardCat = card.dataset.category;
-    const show = category === 'all' || cardCat === category;
-    card.classList.toggle('hidden', !show);
+    card.classList.toggle('hidden', category !== 'all' && cardCat !== category);
   });
 }
 
 /* ============================================================
-   13. VIEW SWITCHING — Landing ↔ Simulator
+   13. VIEW SWITCHING
 ============================================================ */
-
-/**
- * Shows the simulator and hides the landing page.
- * Called by "Start Simulation" / "Launch Simulator" buttons.
- */
 function showSimulator() {
   document.getElementById('landing').classList.add('hidden');
   document.getElementById('simulator').classList.add('active');
-  // Full initial render
   renderServers();
   renderDistribution();
   renderSessions();
   renderAlgoComparison();
   updateTopBar();
-  // Scroll to top
   window.scrollTo(0, 0);
-  addLog(`🚀 Simulation started. Select algorithm and send requests.`, 'var(--accent)');
+  addLog(`🚀 Simulator initialized. Select an algorithm and send requests.`, 'var(--accent)');
 }
 
-/**
- * Returns to the landing page from the simulator.
- * Stops auto mode if running.
- */
 function showLanding() {
-  if (state.autoMode) toggleAuto(); // Stop auto
+  if (state.autoMode) toggleAuto();
   document.getElementById('simulator').classList.remove('active');
   document.getElementById('landing').classList.remove('hidden');
   window.scrollTo(0, 0);
 }
 
 /* ============================================================
-   14. RENDER FUNCTIONS — DOM updates
+   14. RENDER FUNCTIONS
 ============================================================ */
-
-/**
- * Helper: returns the correct color for a CPU percentage.
- * @param {number} cpu
- * @returns {string} CSS color string
- */
 function cpuColor(cpu) {
   if (cpu > 80) return 'var(--red)';
   if (cpu > 60) return 'var(--yellow)';
   return 'var(--green)';
 }
 
-/**
- * Renders all server cards in the server pool panel.
- * Shows CPU bar, MEM bar, connections, latency, kill/sleep/revive buttons.
- */
 function renderServers() {
   const container = document.getElementById('serverPool');
   if (!container) return;
 
   container.innerHTML = state.servers.map(s => {
-    const statusStr  = s.sleeping ? 'SLEEP' : s.status.toUpperCase();
+    const statusStr   = s.sleeping ? 'SLEEP' : s.status.toUpperCase();
     const statusColor = s.sleeping ? 'var(--purple)' : (
-      s.status === 'healthy' ? 'var(--green)' :
+      s.status === 'healthy'    ? 'var(--green)'  :
       s.status === 'overloaded' ? 'var(--yellow)' :
-      s.status === 'down' ? 'var(--red)' : 'var(--dim)'
+      s.status === 'down'       ? 'var(--red)'    :
+      'var(--dim)'
     );
-    const dotColor = statusColor;
     const itemClass = `server-item ${s.sleeping ? 'sleeping' : s.status}`;
-
-    // CPU display — show "ZZZ" if sleeping
     const cpuDisplay = s.sleeping ? 0 : s.cpu;
 
-    // Kill or Revive button
     const killReviveBtn = s.status === 'down' || s.sleeping
-      ? `<button class="sbtn sbtn-revive" onclick="reviveServer(${s.id})">REVIVE</button>`
-      : `<button class="sbtn sbtn-kill" onclick="killServer(${s.id})">KILL</button>`;
+      ? `<button class="sbtn sbtn-revive" onclick="reviveServer(${s.id})">Revive</button>`
+      : `<button class="sbtn sbtn-kill"   onclick="killServer(${s.id})">Kill</button>`;
 
-    // Sleep/Wake button (not shown if dead)
     const sleepBtn = s.status !== 'down'
-      ? `<button class="sbtn sbtn-sleep" onclick="toggleSleep(${s.id})">${s.sleeping ? 'WAKE' : 'SLEEP'}</button>`
+      ? `<button class="sbtn sbtn-sleep" onclick="toggleSleep(${s.id})">${s.sleeping ? 'Wake' : 'Sleep'}</button>`
       : '';
 
-    // Prediction warning indicator
     const predictWarning = isPredictedOverload(s.id) && !s.sleeping && s.status !== 'down'
-      ? `<span style="color:var(--orange);font-family:var(--mono);font-size:10px;margin-left:6px">▲ RISING</span>`
+      ? `<span style="color:var(--orange);font-family:var(--mono);font-size:9px;margin-left:4px">▲ RISING</span>`
       : '';
 
     return `
       <div class="${itemClass}">
         <div class="server-header">
-          <div class="server-dot" style="background:${dotColor}"></div>
+          <div class="server-dot" style="background:${statusColor}"></div>
           <span class="server-name">${s.name}</span>
           ${predictWarning}
           <span class="server-status" style="color:${statusColor}">${statusStr}</span>
@@ -630,7 +453,7 @@ function renderServers() {
         <div class="server-footer">
           <span class="server-footer-stat">CONN <b>${s.connections}</b></span>
           <span class="server-footer-stat">TOTAL <b>${s.totalHandled}</b></span>
-          <span class="server-footer-stat">WEIGHT <b style="color:var(--purple)">${s.weight}</b></span>
+          <span class="server-footer-stat">WT <b style="color:var(--purple)">${s.weight}</b></span>
           <div class="server-btns">
             ${killReviveBtn}
             ${sleepBtn}
@@ -641,10 +464,6 @@ function renderServers() {
   }).join('');
 }
 
-/**
- * Renders the load distribution bar chart.
- * Shows total requests handled per server as a relative bar.
- */
 function renderDistribution() {
   const container = document.getElementById('distChart');
   if (!container) return;
@@ -668,9 +487,6 @@ function renderDistribution() {
   }).join('');
 }
 
-/**
- * Renders active session tags in the session manager panel.
- */
 function renderSessions() {
   const container = document.getElementById('sessionTags');
   if (!container) return;
@@ -683,7 +499,7 @@ function renderSessions() {
 
   container.innerHTML = users.map(user => {
     const serverId = state.sessions[user];
-    const srvName = serverId ? `SRV-${String(serverId).padStart(2,'0')}` : '??';
+    const srvName  = serverId ? `SRV-${String(serverId).padStart(2,'0')}` : '??';
     return `
       <div class="sess-tag">
         <div class="sess-dot"></div>
@@ -695,22 +511,17 @@ function renderSessions() {
   }).join('');
 }
 
-/**
- * Renders the algorithm comparison panel.
- * Highlights the currently active algorithm.
- */
 function renderAlgoComparison() {
   const container = document.getElementById('algoCompare');
   if (!container) return;
 
   const algos = [
-    { name: 'Round Robin',    score: 60, color: 'var(--accent)', desc: 'Equal distribution, ignores real load' },
-    { name: 'Least Load',     score: 85, color: 'var(--green)',  desc: 'Routes to lowest CPU — best balance' },
-    { name: 'Weighted',       score: 75, color: 'var(--yellow)', desc: 'Proportional to server capacity weight' },
-    { name: 'Session-Aware',  score: 92, color: 'var(--purple)', desc: 'Sticky sessions + adaptive fallback' },
+    { name: 'Round Robin',   score: 60, color: 'var(--accent)', desc: 'Equal distribution, ignores real load' },
+    { name: 'Least Load',    score: 85, color: 'var(--green)',  desc: 'Routes to lowest CPU — best balance' },
+    { name: 'Weighted',      score: 75, color: 'var(--yellow)', desc: 'Proportional to server capacity weight' },
+    { name: 'Session-Aware', score: 92, color: 'var(--purple)', desc: 'Sticky sessions + adaptive fallback' },
   ];
 
-  // Show active algorithm description
   const active = algos.find(a => a.name === state.algo);
   const descHtml = active
     ? `<div class="cmp-desc">▶ <b>${active.name}</b>: ${active.desc}</div>`
@@ -730,13 +541,11 @@ function renderAlgoComparison() {
   }).join('');
 }
 
-/**
- * Updates the top status bar in the simulator.
- * Shows total requests, dropped, sessions, load variance, active algo.
- */
 function updateTopBar() {
-  // Load variance — standard deviation across active server CPUs
-  const activeCpus = state.servers.filter(s => s.status !== 'down' && !s.sleeping).map(s => s.cpu);
+  const activeCpus = state.servers
+    .filter(s => s.status !== 'down' && !s.sleeping)
+    .map(s => s.cpu);
+
   let variance = 0;
   if (activeCpus.length > 1) {
     const mean = activeCpus.reduce((a, b) => a + b, 0) / activeCpus.length;
@@ -752,21 +561,13 @@ function updateTopBar() {
 }
 
 /* ============================================================
-   15. EVENT LOG — Timestamped activity feed
+   15. EVENT LOG
 ============================================================ */
-
-/**
- * Prepends a new entry to the event log panel.
- * @param {string} message
- * @param {string} color — CSS color string
- */
 function addLog(message, color = 'var(--text)') {
   const container = document.getElementById('eventLog');
   if (!container) return;
 
-  const now = new Date();
-  const time = now.toLocaleTimeString('en-US', { hour12: false });
-
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false });
   const entry = document.createElement('div');
   entry.className = 'log-entry';
   entry.innerHTML = `
@@ -774,16 +575,14 @@ function addLog(message, color = 'var(--text)') {
     <span class="log-msg" style="color:${color}">${message}</span>
   `;
 
-  // Prepend so newest is at top
   container.insertBefore(entry, container.firstChild);
 
-  // Keep log at max 60 entries to avoid memory leak
   while (container.children.length > 60) {
     container.removeChild(container.lastChild);
   }
 }
 
 /* ============================================================
-   16. INIT — Run on page load
+   16. INIT
 ============================================================ */
 boot();
